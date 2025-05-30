@@ -129,6 +129,9 @@
   <ItemGroup>
     <ClCompile Include="ConsoleApplication9.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="ASY_WD_1.1.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
