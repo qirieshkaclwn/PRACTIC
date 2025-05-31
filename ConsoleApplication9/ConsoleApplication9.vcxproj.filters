@@ -20,7 +20,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ASY_WD_1.1.txt">
+    <Text Include="ASY_WD_1.2.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
+    <Text Include="ASY_WD_1.3.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
+    <Text Include="ASY_WD_2.1.txt">
       <Filter>Файлы ресурсов</Filter>
     </Text>
   </ItemGroup>
