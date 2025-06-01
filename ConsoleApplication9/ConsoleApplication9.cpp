@@ -4,29 +4,13 @@
 
 using namespace std;
 
-//не коректныу тесты
+//не корректные тесты
 //const char* filename = "ASY_WD_1.1.txt";//Не удалось открыть файл: ASY_WD_1.1.txt
 //const char* filename = "ASY_WD_1.2.txt";
-/*
-[ОШИБКА] Строка 2: недостаточно данных для обработки.
-   > 07:20 SSJ-100 RA-89005
-[ОШИБКА] Строка 3: некорректный бортовой номер или марка ЛА
-   > 15:50 RA-64521 Самара
-[ОШИБКА] Строка 7: некорректное время посадки
-   > Су-34 RA-93005 Новосибирск
-[ОШИБКА] Строка 9: некорректный бортовой номер или марка ЛА
-   > 09:45 RA-89001 Омск
-[ОШИБКА] Строка 12: недостаточно данных для обработки.
-   > 13:25 Ту-204 Ростов-на-Дону
-[ОШИБКА] Строка 15: недостаточно данных для обработки.
-   > 09:00 Ил-96 Нижневартовск
-[ОШИБКА] Строка 19: некорректный бортовой номер или марка ЛА
-   > 12:00 RA-89123 Казань
-*/
 //const char* filename = "ASY_WD_1.3.txt";//повтор времени посадки
 //const char* filename = "ASY_WD_1.4.txt";//конфликт бортового номера с разными марками.
 
-//коректные тесты
+//корректные тесты
 const char* filename = "ASY_WD_2.1.txt";
 
 // Структура с информацией о рейсе
@@ -140,7 +124,10 @@ void printTable(const FlightInfo flights[],//структура
 int strLength(const char* s)
 {
     int len = 0;
-    while (s[len] != '\0') len++;
+    while (s[len] != '\0')
+    {
+        len++;
+    }
     return len;
 }
 
@@ -227,7 +214,7 @@ bool stringsEqual(const char* a, const char* b) {
         }
         i++;
     }
-    return a[i] == b[i];
+    return true;
 }
 
 // Загрузка и валидация данных из файла
@@ -235,130 +222,141 @@ void loadData(const char* filename,
     FlightInfo*& flights,
     int& count)
 {
-    ifstream file(filename); // Открытие файла для чтения
+    ifstream file(filename); // Открытие файла
     const int LINE_SIZE = 256;
-    char line[LINE_SIZE]; // Буфер для считывания строки
-    count = 0; // Начальное количество загруженных рейсов
+    char line[LINE_SIZE]; // Буфер для строки
+    char original_line[LINE_SIZE];
 
-    // Проверка открытия файла
-    if (!file) 
+    if (!file)
     {
-        error_coder(1); // Ошибка открытия файла
+        error_coder(1);
         return;
     }
 
-    int capacity = 10; // Начальная вместимость массива
-    flights = new FlightInfo[capacity]; // Выделение памяти под массив структур
-    int line_num = 0; // Номер текущей строки в файле
+    int capacity = 10;
+    flights = new FlightInfo[capacity];
+    int line_num = 0;
 
-    // Построчное чтение файла
     while (file.getline(line, LINE_SIZE))
     {
+        // Очищаем буфер вручную
+        for (int i = file.gcount(); i < LINE_SIZE; ++i)
+        {
+            line[i] = '\0';
+        }
+        
+        int i = 0;
+        for (; i < LINE_SIZE - 1 && line[i] != '\0'; i++)
+        {
+            original_line[i] = line[i];
+        }
+        original_line[i] = '\0';
         line_num++;
+
         if (line[0] == '\0')
         {
-            continue; // Пропуск пустых строк
+            continue;
         }
         int pos = 0;
 
-        
-        // Указатель на начало времени
+        // --- TIME ---
         char* time_start = line + pos;
         while (line[pos] != ' ' && line[pos] != '\0')
         {
             ++pos;
         }
-        line[pos++] = '\0'; // Завершаем строку времени
-
-        // Пропускаем пробелы между полями
+        if (line[pos] != '\0')
+        {
+            line[pos++] = '\0';
+        }
+        // Пропуск пробелов
         while (line[pos] == ' ')
         {
             ++pos;
         }
-        // Указатель на начало марки
+        // --- MARKA ---
         char* marka_start = line + pos;
         while (line[pos] != ' ' && line[pos] != '\0')
         {
             ++pos;
         }
-        line[pos++] = '\0'; // Завершаем строку марки
-
+        if (line[pos] != '\0')
+        {
+            line[pos++] = '\0';
+        }
         while (line[pos] == ' ')
         {
             ++pos;
         }
-        // Указатель на начало номера борта
+        // --- NUMBER ---
         char* number_start = line + pos;
         while (line[pos] != ' ' && line[pos] != '\0')
         {
             ++pos;
         }
-        line[pos++] = '\0'; // Завершаем строку номера
+        if (line[pos] != '\0') line[pos++] = '\0';
 
         while (line[pos] == ' ')
         {
             ++pos;
         }
-        // Указатель на начало пункта назначения
+        // --- POINT ---
         char* point_start = line + pos;
-        // Последнее поле до конца строки — завершать не нужно
-
-        // --- Проверка корректности данных ---
-        if (*time_start == '\0') 
+        if (*point_start == '\0') 
         {
-            error_coder(4, line_num, line); // Поле времени пустое
+            error_coder(4, line_num, original_line);
             continue;
         }
-        if (*marka_start == '\0') 
+
+        // --- Валидация ---
+        if (*time_start == '\0')
         {
-            error_coder(4, line_num, line); // Поле марки пустое
+            error_coder(4, line_num, original_line);
+            continue;
+        }
+        if (*marka_start == '\0')
+        {
+            error_coder(4, line_num, original_line);
             continue;
         }
         if (*number_start == '\0')
         {
-            error_coder(4, line_num, line); // Поле номера пустое
-            continue;
-        }
-        if (*point_start == '\0') 
-        {
-            error_coder(4, line_num, line); // Поле пункта назначения пустое
+            error_coder(4, line_num, original_line);
             continue;
         }
 
-        if (!isValidTime(time_start)) 
+        if (!isValidTime(time_start))
         {
-            error_coder(2, line_num, line); // Неверный формат времени
+            error_coder(2, line_num, original_line);
             continue;
         }
 
-        if (!isValidBoardNumber(number_start))
+        if (!isValidBoardNumber(number_start)) 
         {
-            error_coder(3, line_num, line); // Неверный номер борта
+            error_coder(3, line_num, original_line);
             continue;
         }
 
-        // Проверка на повтор времени вылета
         bool duplicateTime = false;
         for (int j = 0; j < count; ++j)
         {
-            if (stringsEqual(flights[j].time, time_start))
+            if (stringsEqual(flights[j].time, time_start)) 
             {
-                error_coder(5, line_num, line); // Повтор времени
+                error_coder(5, line_num, original_line);
                 duplicateTime = true;
                 break;
             }
         }
-        if (duplicateTime)
-        {
-            continue;
-        }
-        // Проверка на конфликт марок при одинаковом номере
+        if (duplicateTime) continue;
+
         bool conflictNumber = false;
-        for (int j = 0; j < count; ++j)
+        for (int j = 0; j < count; ++j) 
         {
-            if (stringsEqual(flights[j].number, number_start)) {
-                if (!stringsEqual(flights[j].marka, marka_start)) {
-                    error_coder(6, line_num, line); // Один и тот же номер у разных марок
+            if (stringsEqual(flights[j].number, number_start))
+            {
+                if (!stringsEqual(flights[j].marka, marka_start))
+                {
+                    error_coder(6, line_num, original_line);
                     conflictNumber = true;
                     break;
                 }
@@ -368,7 +366,7 @@ void loadData(const char* filename,
         {
             continue;
         }
-        // Расширение массива при нехватке места
+        // Расширение массива
         if (count >= capacity)
         {
             capacity *= 2;
@@ -377,19 +375,19 @@ void loadData(const char* filename,
             {
                 newArr[j] = flights[j];
             }
-            delete[] flights; // Освобождаем старый массив
+            delete[] flights;
             flights = newArr;
         }
 
-        // --- Копирование строки в структуру ---
+        // Копирование данных
         flights[count].time = copyNewString(time_start);
         flights[count].marka = copyNewString(marka_start);
         flights[count].number = copyNewString(number_start);
         flights[count].point = copyNewString(point_start);
-        count++; // Увеличиваем количество записей
+        count++;
     }
 
-    file.close(); // Закрываем файл
+    file.close();
 }
 
 
