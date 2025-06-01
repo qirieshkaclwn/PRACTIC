@@ -4,9 +4,8 @@
 
 using namespace std;
 
-const int MAX_FLIGHTS = 20;
 //не коректныу тесты
-const char* filename = "ASY_WD_1.1.txt";//Не удалось открыть файл: ASY_WD_1.1.txt
+//const char* filename = "ASY_WD_1.1.txt";//Не удалось открыть файл: ASY_WD_1.1.txt
 //const char* filename = "ASY_WD_1.2.txt";
 /*
 [ОШИБКА] Строка 2: недостаточно данных для обработки.
@@ -27,35 +26,32 @@ const char* filename = "ASY_WD_1.1.txt";//Не удалось открыть ф�
 //const char* filename = "ASY_WD_1.3.txt";//повтор времени посадки
 //const char* filename = "ASY_WD_1.4.txt";//конфликт бортового номера с разными марками.
 
-struct FlightInfo {
-    char time[6];
-    char marka[8];
-    char number[20];
-    char point[50];
+//коректные тесты
+const char* filename = "ASY_WD_2.1.txt";
+
+// Структура с информацией о рейсе
+struct FlightInfo 
+{
+    char* time;   // Время посадки в формате "HH:MM"
+    char* marka;  // Марка воздушного судна (ЛА)
+    char* number; // Бортовой номер
+    char* point;  // Пункт отправления
 };
 
-// Функции
-void printTable(const FlightInfo flights[], int count);
-bool isDigit(char c);
-int strLength(const char* s);
-bool isValidTime(const char* time);
-bool isValidBoardNumber(const char* number);
-bool stringsEqual(const char* a, const char* b);
-void copyString(char* dest, const char* src, int maxLen);
-bool lessThan(const char* s1, const char* s2);
-void indexSort(FlightInfo flights[], int indices[], int n);
-
-// Обработка ошибок
-void error_coder(int code, int line = -1, const char* line_text = nullptr, const FlightInfo* flights = nullptr, int count = 0) {
+// Обработка ошибок: выводит сообщение в консоль по коду ошибки
+void error_coder(int code,//код ошибки
+    int line = -1,//строка в файле данных
+    const char* line_text = nullptr)//содержимое строки
+{
     switch (code) {
     case 1:
-        cerr << "[ОШИБКА] Не удалось открыть файл: " << filename << endl;
+        cerr << "[ОШИБКА] Не удалось открыть файл." << endl;
         break;
     case 2:
-        cerr << "[ОШИБКА] Строка " << line << ": некорректное время посадки " << (flights ? flights[count].time : "") << endl;
+        cerr << "[ОШИБКА] Строка " << line << ": некорректное время посадки." << endl;
         break;
     case 3:
-        cerr << "[ОШИБКА] Строка " << line << ": некорректный бортовой номер или марка ЛА " << (flights ? flights[count].number : "") << endl;
+        cerr << "[ОШИБКА] Строка " << line << ": некорректный бортовой номер или марка ЛА." << endl;
         break;
     case 4:
         cerr << "[ОШИБКА] Строка " << line << ": недостаточно данных для обработки." << endl;
@@ -70,18 +66,23 @@ void error_coder(int code, int line = -1, const char* line_text = nullptr, const
         cerr << "[ОШИБКА] Неизвестный код ошибки: " << code << endl;
         break;
     }
-
-    if (line_text) {
-        cerr << "   > " << line_text << endl;
+    if (line_text)
+    {
+        cerr << "   > " << line_text << endl; // Показывает текст строки с ошибкой, если передан
     }
 }
 
-void printTable(const FlightInfo flights[], int count) {
+// Функция вывода таблицы с рейсами
+void printTable(const FlightInfo flights[],//структура
+    int count)//кол-во строк в таблице
+{
     setlocale(LC_ALL, "C");
+    // Верхняя граница таблицы
     cout << char(218) << setfill(char(196)) << setw(20) << char(194)
         << setw(20) << char(194) << setw(20) << char(194) << setw(20)
         << char(191) << endl;
 
+    // Заголовки таблицы
     cout << char(179) << setfill(' ') << setw(19);
     setlocale(LC_ALL, "Russian");
     cout << "Время посадки";
@@ -100,11 +101,14 @@ void printTable(const FlightInfo flights[], int count) {
     setlocale(LC_ALL, "C");
     cout << char(179) << endl;
 
+    // Разделительная линия под заголовками
     cout << char(195) << setfill(char(196)) << setw(20) << char(197)
         << setw(20) << char(197) << setw(20) << char(197) << setw(20)
         << char(180) << endl;
 
-    for (int i = 0; i < count; ++i) {
+    // Строки таблицы с рейсами
+    for (int i = 0; i < count; ++i)
+    {
         setlocale(LC_ALL, "C");
         cout << char(179) << setfill(' ') << setw(19);
         setlocale(LC_ALL, "Russian");
@@ -125,192 +129,366 @@ void printTable(const FlightInfo flights[], int count) {
         cout << char(179) << endl;
     }
 
+    // Нижняя граница таблицы
     cout << char(192) << setfill(char(196)) << setw(20) << char(193)
         << setw(20) << char(193) << setw(20) << char(193) << setw(20)
         << char(217) << endl;
     setlocale(LC_ALL, "Russian");
 }
 
-bool isDigit(char c) {
-    return c >= '0' && c <= '9';
-}
-
-int strLength(const char* s) {
+//ф-ция подсчёта длины строки
+int strLength(const char* s)
+{
     int len = 0;
     while (s[len] != '\0') len++;
     return len;
 }
 
-bool isValidTime(const char* time) {
-    if (strLength(time) != 5) return false;
-    if (time[2] != ':') return false;
-    if (!(isDigit(time[0]) && isDigit(time[1]) && isDigit(time[3]) && isDigit(time[4])))
-        return false;
-    int hours = (time[0] - '0') * 10 + (time[1] - '0');
-    int minutes = (time[3] - '0') * 10 + (time[4] - '0');
-    return (hours >= 0 && hours < 24) && (minutes >= 0 && minutes < 60);
+//ф-ция создает динамическую копию строки src в новой области памяти и возвращает указатель на неё.
+char* copyNewString(const char* src)
+{
+    int len = strLength(src);
+    char* dest = new char[len + 1]; // +1 под нуль-терминатор
+    for (int i = 0; i <= len; ++i)
+    {
+        dest[i] = src[i];
+    }
+    return dest;
 }
 
-bool isValidBoardNumber(const char* number) {
+// Проверка: символ — цифра?
+bool isDigit(char c)
+{
+    return c >= '0' && c <= '9';
+}
+
+// Проверка корректности времени: формат "HH:MM", часы от 0 до 23, минуты от 0 до 59
+bool isValidTime(const char* time)
+{
+    if (strLength(time) != 5 || time[2] != ':')
+    {
+        return false;
+    }
+    if (!isDigit(time[0])) 
+    {
+        return false;
+    }
+    if (!isDigit(time[1])) 
+    {
+        return false;
+    }
+    if (!isDigit(time[3])) 
+    {
+        return false;
+    }
+    if (!isDigit(time[4]))
+    {
+        return false;
+    }
+    int h = (time[0] - '0') * 10 + (time[1] - '0');
+    int m = (time[3] - '0') * 10 + (time[4] - '0');
+    if (h < 0 || h >= 24)
+    {
+        return false;
+    }
+    if (m < 0 || m >= 60)
+    {
+        return false;
+    }
+    return true;
+}
+
+// Проверка корректности бортового номера (наличие дефиса)
+bool isValidBoardNumber(const char* number) 
+{
     int len = strLength(number);
-    if (len < 5) return false;
-    for (int i = 0; i < len; ++i) {
-        if (number[i] == '-') return true;
+    if (len < 5)
+    {
+        return false;
+    }
+    for (int i = 0; i < len; ++i)
+    {
+        if (number[i] == '-')
+        {
+            return true;
+        }
     }
     return false;
 }
 
+// Сравнение строк
 bool stringsEqual(const char* a, const char* b) {
     int i = 0;
-    while (a[i] != '\0' && b[i] != '\0') {
-        if (a[i] != b[i]) return false;
+    while (a[i] != '\0' && b[i] != '\0')
+    {
+        if (a[i] != b[i])
+        {
+            return false;
+        }
         i++;
     }
     return a[i] == b[i];
 }
 
-void copyString(char* dest, const char* src, int maxLen) {
-    int i = 0;
-    for (; i < maxLen - 1 && src[i] != '\0'; ++i)
-        dest[i] = src[i];
-    dest[i] = '\0';
-}
-
-void loadData(const char* filename, FlightInfo flights[], int& count, int& code_err, int& error_line) {
-    ifstream file(filename);
+// Загрузка и валидация данных из файла
+void loadData(const char* filename,
+    FlightInfo*& flights,
+    int& count)
+{
+    ifstream file(filename); // Открытие файла для чтения
     const int LINE_SIZE = 256;
-    char line[LINE_SIZE];
-    count = 0;
-    error_line = 0;
+    char line[LINE_SIZE]; // Буфер для считывания строки
+    count = 0; // Начальное количество загруженных рейсов
 
-    if (!file) {
-        code_err = 1;
-        error_coder(code_err);
+    // Проверка открытия файла
+    if (!file) 
+    {
+        error_coder(1); // Ошибка открытия файла
         return;
     }
 
-    while (file.getline(line, LINE_SIZE)) {
-        error_line++;
-        if (line[0] == '\0') continue;
+    int capacity = 10; // Начальная вместимость массива
+    flights = new FlightInfo[capacity]; // Выделение памяти под массив структур
+    int line_num = 0; // Номер текущей строки в файле
 
-        char time[6] = {}, marka[8] = {}, number[20] = {}, point[50] = {};
-        int pos = 0, i = 0;
+    // Построчное чтение файла
+    while (file.getline(line, LINE_SIZE))
+    {
+        line_num++;
+        if (line[0] == '\0')
+        {
+            continue; // Пропуск пустых строк
+        }
+        int pos = 0;
 
-        // Время
-        while (line[pos] != ' ' && line[pos] != '\0' && i < 5)
-            time[i++] = line[pos++];
-        time[i] = '\0';
-        while (line[pos] == ' ') pos++;
+        
+        // Указатель на начало времени
+        char* time_start = line + pos;
+        while (line[pos] != ' ' && line[pos] != '\0')
+        {
+            ++pos;
+        }
+        line[pos++] = '\0'; // Завершаем строку времени
 
-        // Марка
-        i = 0;
-        while (line[pos] != ' ' && line[pos] != '\0' && i < 7)
-            marka[i++] = line[pos++];
-        marka[i] = '\0';
-        while (line[pos] == ' ') pos++;
+        // Пропускаем пробелы между полями
+        while (line[pos] == ' ')
+        {
+            ++pos;
+        }
+        // Указатель на начало марки
+        char* marka_start = line + pos;
+        while (line[pos] != ' ' && line[pos] != '\0')
+        {
+            ++pos;
+        }
+        line[pos++] = '\0'; // Завершаем строку марки
 
-        // Бортовой номер
-        i = 0;
-        while (line[pos] != ' ' && line[pos] != '\0' && i < 19)
-            number[i++] = line[pos++];
-        number[i] = '\0';
-        while (line[pos] == ' ') pos++;
+        while (line[pos] == ' ')
+        {
+            ++pos;
+        }
+        // Указатель на начало номера борта
+        char* number_start = line + pos;
+        while (line[pos] != ' ' && line[pos] != '\0')
+        {
+            ++pos;
+        }
+        line[pos++] = '\0'; // Завершаем строку номера
 
-        // Пункт
-        i = 0;
-        while (line[pos] != '\0' && i < 49)
-            point[i++] = line[pos++];
-        point[i] = '\0';
+        while (line[pos] == ' ')
+        {
+            ++pos;
+        }
+        // Указатель на начало пункта назначения
+        char* point_start = line + pos;
+        // Последнее поле до конца строки — завершать не нужно
 
-        if (time[0] == '\0' || marka[0] == '\0' || number[0] == '\0' || point[0] == '\0') {
-            error_coder(4, error_line, line);
+        // --- Проверка корректности данных ---
+        if (*time_start == '\0') 
+        {
+            error_coder(4, line_num, line); // Поле времени пустое
             continue;
         }
-        if (!isValidTime(time)) {
-            error_coder(2, error_line, line);
+        if (*marka_start == '\0') 
+        {
+            error_coder(4, line_num, line); // Поле марки пустое
             continue;
         }
-        if (!isValidBoardNumber(number)) {
-            error_coder(3, error_line, line);
+        if (*number_start == '\0')
+        {
+            error_coder(4, line_num, line); // Поле номера пустое
+            continue;
+        }
+        if (*point_start == '\0') 
+        {
+            error_coder(4, line_num, line); // Поле пункта назначения пустое
             continue;
         }
 
+        if (!isValidTime(time_start)) 
+        {
+            error_coder(2, line_num, line); // Неверный формат времени
+            continue;
+        }
+
+        if (!isValidBoardNumber(number_start))
+        {
+            error_coder(3, line_num, line); // Неверный номер борта
+            continue;
+        }
+
+        // Проверка на повтор времени вылета
         bool duplicateTime = false;
-        for (int j = 0; j < count; ++j) {
-            if (stringsEqual(flights[j].time, time)) {
-                error_coder(5, error_line, line);
+        for (int j = 0; j < count; ++j)
+        {
+            if (stringsEqual(flights[j].time, time_start))
+            {
+                error_coder(5, line_num, line); // Повтор времени
                 duplicateTime = true;
                 break;
             }
         }
-        if (duplicateTime) continue;
-
+        if (duplicateTime)
+        {
+            continue;
+        }
+        // Проверка на конфликт марок при одинаковом номере
         bool conflictNumber = false;
-        for (int j = 0; j < count; ++j) {
-            if (stringsEqual(flights[j].number, number) && !stringsEqual(flights[j].marka, marka)) {
-                error_coder(6, error_line, line);
-                conflictNumber = true;
-                break;
+        for (int j = 0; j < count; ++j)
+        {
+            if (stringsEqual(flights[j].number, number_start)) {
+                if (!stringsEqual(flights[j].marka, marka_start)) {
+                    error_coder(6, line_num, line); // Один и тот же номер у разных марок
+                    conflictNumber = true;
+                    break;
+                }
             }
         }
-        if (conflictNumber) continue;
+        if (conflictNumber)
+        {
+            continue;
+        }
+        // Расширение массива при нехватке места
+        if (count >= capacity)
+        {
+            capacity *= 2;
+            FlightInfo* newArr = new FlightInfo[capacity];
+            for (int j = 0; j < count; ++j)
+            {
+                newArr[j] = flights[j];
+            }
+            delete[] flights; // Освобождаем старый массив
+            flights = newArr;
+        }
 
-        copyString(flights[count].time, time, 6);
-        copyString(flights[count].marka, marka, 8);
-        copyString(flights[count].number, number, 20);
-        copyString(flights[count].point, point, 50);
-        count++;
-        if (count >= MAX_FLIGHTS) break;
+        // --- Копирование строки в структуру ---
+        flights[count].time = copyNewString(time_start);
+        flights[count].marka = copyNewString(marka_start);
+        flights[count].number = copyNewString(number_start);
+        flights[count].point = copyNewString(point_start);
+        count++; // Увеличиваем количество записей
     }
 
-    file.close();
+    file.close(); // Закрываем файл
 }
 
-bool lessThan(const char* s1, const char* s2) {
+
+// Сравнение строк — используется для сортировки по времени
+bool lessThan(const char* s1,
+    const char* s2) 
+{
     int i = 0;
-    while (s1[i] != '\0' && s2[i] != '\0') {
-        if (s1[i] < s2[i]) return true;
-        if (s1[i] > s2[i]) return false;
+    while (s1[i] != '\0' && s2[i] != '\0')
+    {
+        if (s1[i] < s2[i])
+        {
+            return true;
+        }
+        if (s1[i] > s2[i])
+        {
+            return false;
+        }
         i++;
     }
     return s1[i] == '\0' && s2[i] != '\0';
 }
 
-void indexSort(FlightInfo flights[], int indices[], int n) {
-    for (int i = 0; i < n; ++i) indices[i] = i;
-    for (int i = 0; i < n - 1; ++i) {
-        int min_idx = i;
-        for (int j = i + 1; j < n; ++j) {
-            if (lessThan(flights[indices[j]].time, flights[indices[min_idx]].time))
-                min_idx = j;
+// Индексная сортировка массива FlightInfo по времени посадки 
+void indexSort(FlightInfo flights[],//структура
+    int indices[],//массив индексов для сортировки 
+    int n)//кол-во элементов
+{
+    // Инициализируем массив индексов
+    for (int i = 0; i < n; ++i)
+    {
+        indices[i] = i;
+    }
+    int Min, jMin, Temp;
+
+    for (int iSort = 0; iSort < n - 1; iSort++)
+    {
+        Min = indices[iSort];
+        jMin = iSort;
+
+        for (int j = iSort + 1; j < n; j++)
+        {
+            if (lessThan(flights[indices[j]].time, flights[Min].time)) 
+            {
+                Min = indices[j];
+                jMin = j;
+            }
         }
-        int temp = indices[i];
-        indices[i] = indices[min_idx];
-        indices[min_idx] = temp;
+
+        Temp = indices[iSort];
+        indices[iSort] = indices[jMin];
+        indices[jMin] = Temp;
     }
 }
 
+
+// Главная функция программы
 int main() {
     setlocale(LC_ALL, "Russian");
-    FlightInfo flights[MAX_FLIGHTS];
-    FlightInfo sortedFlights[MAX_FLIGHTS];
-    int code_err = 0, error_line = -1, count = 0;
-    int indices[MAX_FLIGHTS];
 
-    loadData(filename, flights, count, code_err, error_line);
-    if (code_err == 1) 
+    FlightInfo* flights = nullptr;
+    int count = 0;
+
+    // Загрузка данных из файла
+    loadData(filename, flights, count);
+    if (!flights)
     {
         return 1;
     }
-    cout << "Данные до сортировки:" << endl;
+    // Вывод исходных данных
+    cout << "Данные до сортировки:\n";
     printTable(flights, count);
 
+    // Индексная сортировка по времени
+    int* indices = new int[count];
     indexSort(flights, indices, count);
-    for (int i = 0; i < count; i++)
-        sortedFlights[i] = flights[indices[i]];
 
-    cout << "\nДанные после сортировки по времени посадки:" << endl;
+    // Копируем отсортированные рейсы в новый массив
+    FlightInfo* sortedFlights = new FlightInfo[count];
+    for (int i = 0; i < count; ++i)
+    {
+        sortedFlights[i] = flights[indices[i]];
+    }
+    // Вывод отсортированных данных
+    cout << "\nДанные после сортировки по времени посадки:\n";
     printTable(sortedFlights, count);
+
+    // Очистка динамически выделенной памяти
+    for (int i = 0; i < count; ++i) 
+    {
+        delete[] flights[i].time;
+        delete[] flights[i].marka;
+        delete[] flights[i].number;
+        delete[] flights[i].point;
+
+    }
+    delete[] flights;
+    delete[] sortedFlights;
+    delete[] indices;
 
     return 0;
 }
