@@ -6,10 +6,10 @@ using namespace std;
 
 //не корректные тесты
 //const char* filename = "ASY_WD_1.1.txt";//Не удалось открыть файл: ASY_WD_1.1.txt
-//const char* filename = "ASY_WD_1.2.txt";
-//const char* filename = "ASY_WD_1.3.txt";//повтор времени посадки
-//const char* filename = "ASY_WD_1.4.txt";//конфликт бортового номера с разными марками.
-
+//const char* filename = "ASY_WD_1.2.txt";//[ОШИБКА] Строка 2: недостаточно данных для обработки. > 07:20  RA - 89005 Новосибирск
+//const char* filename = "ASY_WD_1.3.txt";//[ОШИБКА] Строка 3: недостаточно данных для обработки. > 15:50 Ту - 214  Самара
+//const char* filename = "ASY_WD_1.4.txt";//[ОШИБКА] Строка 7: конфликт бортового номера с разными марками. > 17:00 Су - 34 RA - 85843 Новосибирск
+//const char* filename = "ASY_WD_1.5.txt";//много различных ошибок
 //корректные тесты
 const char* filename = "ASY_WD_2.1.txt";
 
@@ -21,6 +21,8 @@ struct FlightInfo
     char* number; // Бортовой номер
     char* point;  // Пункт отправления
 };
+
+//прототипы ф-ций
 
 // Обработка ошибок: выводит сообщение в консоль по коду ошибки
 void error_coder(int code,//код ошибки
@@ -218,178 +220,238 @@ bool stringsEqual(const char* a, const char* b) {
 }
 
 // Загрузка и валидация данных из файла
-void loadData(const char* filename,
-    FlightInfo*& flights,
-    int& count)
+void loadData(const char* filename, FlightInfo*& flights, int& count)
 {
-    ifstream file(filename); // Открытие файла
+    // Открытие входного файла для чтения
+    ifstream file(filename);
+
+    // Максимальный размер строки, читаемой из файла
     const int LINE_SIZE = 256;
-    char line[LINE_SIZE]; // Буфер для строки
+
+    // Буфер для хранения текущей строки из файла
+    char line[LINE_SIZE];
+
+    // Буфер для хранения оригинальной (неизменённой) строки
     char original_line[LINE_SIZE];
 
+    // Проверка, открылся ли файл
     if (!file)
     {
-        error_coder(1);
-        return;
+        error_coder(1); // Вызов обработчика ошибок: ошибка открытия файла
+        return; // Прерывание выполнения функции
     }
 
+    // Начальная вместимость массива полётов
     int capacity = 10;
+
+    // Выделение памяти под массив полётов
     flights = new FlightInfo[capacity];
+
+    // Счётчик прочитанных и успешно обработанных строк
     int line_num = 0;
 
+    // Чтение файла построчно
     while (file.getline(line, LINE_SIZE))
     {
-        // Очищаем буфер вручную
+        // Очистка оставшейся части буфера после считанной строки
         for (int i = file.gcount(); i < LINE_SIZE; ++i)
         {
-            line[i] = '\0';
+            line[i] = '\0'; // Заполняем остаток строки нулями
         }
-        
+
+        // Копирование строки в оригинальный буфер
         int i = 0;
         for (; i < LINE_SIZE - 1 && line[i] != '\0'; i++)
         {
-            original_line[i] = line[i];
+            original_line[i] = line[i]; // Посимвольное копирование
         }
-        original_line[i] = '\0';
-        line_num++;
+        original_line[i] = '\0'; // Завершение строки нулевым символом
 
+        line_num++; // Увеличение номера строки
+
+        // Пропускаем пустые строки
         if (line[0] == '\0')
         {
             continue;
         }
-        int pos = 0;
 
-        // --- TIME ---
+        int pos = 0; // Позиция для парсинга строки
+
+        // Указатель на начало времени
         char* time_start = line + pos;
+
+        // Поиск пробела или конца строки
         while (line[pos] != ' ' && line[pos] != '\0')
         {
             ++pos;
         }
+
+        // Отделение времени от остального текста
         if (line[pos] != '\0')
         {
-            line[pos++] = '\0';
+            line[pos++] = '\0'; // Заменяем пробел на конец строки и двигаемся дальше
         }
-        // Пропуск пробелов
+
+        // Пропуск пробелов между полями
         while (line[pos] == ' ')
         {
             ++pos;
         }
-        // --- MARKA ---
+
+
+        // Указатель на начало марки
         char* marka_start = line + pos;
+
+        // Поиск конца марки
         while (line[pos] != ' ' && line[pos] != '\0')
         {
             ++pos;
         }
+
+        // Отделение марки от остального текста
         if (line[pos] != '\0')
         {
             line[pos++] = '\0';
         }
+
+        // Пропуск пробелов перед следующим полем
         while (line[pos] == ' ')
         {
             ++pos;
         }
-        // --- NUMBER ---
+
+
+        // Указатель на начало номера
         char* number_start = line + pos;
+
+        // Поиск конца номера
         while (line[pos] != ' ' && line[pos] != '\0')
         {
             ++pos;
         }
-        if (line[pos] != '\0') line[pos++] = '\0';
 
+        // Отделение номера от остального текста
+        if (line[pos] != '\0') 
+        {
+            line[pos++] = '\0';
+        }
+        // Пропуск пробелов перед следующей частью
         while (line[pos] == ' ')
         {
             ++pos;
         }
-        // --- POINT ---
+
+
+        // Указатель на начало пункта отправления
         char* point_start = line + pos;
-        if (*point_start == '\0') 
+
+        // Проверка, что поле отправления не пустое
+        if (*point_start == '\0')
         {
-            error_coder(4, line_num, original_line);
-            continue;
+            error_coder(4, line_num, original_line); // Ошибка: отсутствует поле
+            continue; // Пропуск строки
         }
 
-        // --- Валидация ---
+        //  Валидация 
+        // Проверка, что поле времени заполнено
         if (*time_start == '\0')
         {
-            error_coder(4, line_num, original_line);
+            error_coder(4, line_num, original_line); // Ошибка: отсутствует поле
             continue;
         }
+
+        // Проверка, что поле марки заполнено
         if (*marka_start == '\0')
         {
             error_coder(4, line_num, original_line);
             continue;
         }
+
+        // Проверка, что поле номера заполнено
         if (*number_start == '\0')
         {
             error_coder(4, line_num, original_line);
             continue;
         }
 
+        // Проверка правильности формата времени
         if (!isValidTime(time_start))
         {
-            error_coder(2, line_num, original_line);
+            error_coder(2, line_num, original_line); // Ошибка: неверный формат времени
             continue;
         }
 
-        if (!isValidBoardNumber(number_start)) 
+        // Проверка правильности формата номера
+        if (!isValidBoardNumber(number_start))
         {
-            error_coder(3, line_num, original_line);
+            error_coder(3, line_num, original_line); // Ошибка: неверный формат номера
             continue;
         }
 
+        // Проверка на дублирование времени
         bool duplicateTime = false;
         for (int j = 0; j < count; ++j)
         {
-            if (stringsEqual(flights[j].time, time_start)) 
+            if (stringsEqual(flights[j].time, time_start))
             {
-                error_coder(5, line_num, original_line);
+                error_coder(5, line_num, original_line); // Ошибка: дублирующееся время
                 duplicateTime = true;
                 break;
             }
         }
-        if (duplicateTime) continue;
 
+        // Если найден дубликат времени, пропускаем строку
+        if (duplicateTime)
+        {
+            continue;
+        }
+        // Проверка на конфликт марки с одинаковым номером
         bool conflictNumber = false;
-        for (int j = 0; j < count; ++j) 
+        for (int j = 0; j < count; ++j)
         {
             if (stringsEqual(flights[j].number, number_start))
             {
                 if (!stringsEqual(flights[j].marka, marka_start))
                 {
-                    error_coder(6, line_num, original_line);
+                    error_coder(6, line_num, original_line); // Ошибка: конфликт номера и марки
                     conflictNumber = true;
                     break;
                 }
             }
         }
+
+        // Если найден конфликт, пропускаем строку
         if (conflictNumber)
         {
             continue;
         }
-        // Расширение массива
+
+        //  Расширение массива при необходимости 
         if (count >= capacity)
         {
-            capacity *= 2;
-            FlightInfo* newArr = new FlightInfo[capacity];
+            capacity *= 2; // Увеличиваем вместимость вдвое
+            FlightInfo* newArr = new FlightInfo[capacity]; // Новый массив
             for (int j = 0; j < count; ++j)
             {
-                newArr[j] = flights[j];
+                newArr[j] = flights[j]; // Копируем старые данные
             }
-            delete[] flights;
-            flights = newArr;
+            delete[] flights; // Освобождаем старую память
+            flights = newArr; // Переназначаем указатель
         }
 
-        // Копирование данных
-        flights[count].time = copyNewString(time_start);
-        flights[count].marka = copyNewString(marka_start);
-        flights[count].number = copyNewString(number_start);
-        flights[count].point = copyNewString(point_start);
-        count++;
+        //Копирование данных в структуру 
+        flights[count].time = copyNewString(time_start); // Копируем время
+        flights[count].marka = copyNewString(marka_start); // Копируем марку
+        flights[count].number = copyNewString(number_start); // Копируем номер
+        flights[count].point = copyNewString(point_start); // Копируем пункт отправления
+
+        count++; // Увеличиваем счётчик добавленных записей
     }
 
+    // Закрытие файла
     file.close();
+    return;
 }
-
 
 // Сравнение строк — используется для сортировки по времени
 bool lessThan(const char* s1,

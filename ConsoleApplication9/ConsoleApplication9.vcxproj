@@ -133,6 +133,7 @@
     <Text Include="ASY_WD_1.2.txt" />
     <Text Include="ASY_WD_1.3.txt" />
     <Text Include="ASY_WD_1.4.txt" />
+    <Text Include="ASY_WD_1.5.txt" />
     <Text Include="ASY_WD_2.1.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

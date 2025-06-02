@@ -32,5 +32,8 @@
     <Text Include="ASY_WD_1.4.txt">
       <Filter>Файлы ресурсов</Filter>
     </Text>
+    <Text Include="ASY_WD_1.5.txt">
+      <Filter>Файлы ресурсов</Filter>
+    </Text>
   </ItemGroup>
 </Project>
