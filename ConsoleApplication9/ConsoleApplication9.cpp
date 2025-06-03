@@ -28,6 +28,18 @@ struct IndTime
     int int_time;   // время в минутах от начала суток
 };
 
+int timeToMinutes(const char* timeStr);// Функция преобразует строку времени "HH:MM" в количество минут
+void error_coder(int code, int line, const char* line_text);// Обработка ошибок: выводит сообщение в консоль по коду ошибки
+void printTable(const FlightInfo flights[], const IndTime sortArray[], int count);// Функция вывода таблицы с рейсами
+int strLength(const char* s);//ф-ция подсчёта длины строки
+char* copyNewString(const char* src);//ф-ция создает динамическую копию строки src в новой области памяти и возвращает указатель на неё.
+bool isDigit(char c);// Проверка: символ — цифра?
+bool isValidTime(const char* time);// Проверка корректности времени: формат "HH:MM", часы от 0 до 23, минуты от 0 до 59
+bool isValidBoardNumber(const char* number);// Проверка корректности бортового номера (наличие дефиса)
+bool stringsEqual(const char* a, const char* b);// Сравнение строк
+void loadData(const char* filename, FlightInfo*& flights, int& count, int& err);// Загрузка и валидация данных из файла
+void indexSort(IndTime* sortArray, int n);// Индексная сортировка массива FlightInfo по времени посадки 
+
 // Функция преобразует строку времени "HH:MM" в количество минут
 int timeToMinutes(const char* timeStr) 
 {
@@ -72,7 +84,8 @@ void error_coder(int code,//код ошибки
 }
 
 // Функция вывода таблицы с рейсами
-void printTable(const FlightInfo flights[], const IndTime sortArray[], int count) {
+void printTable(const FlightInfo flights[], const IndTime sortArray[], int count) 
+{
     setlocale(LC_ALL, "C");
     cout << char(218) << setfill(char(196)) << setw(20) << char(194)
         << setw(20) << char(194) << setw(20) << char(194) << setw(20)
@@ -214,7 +227,8 @@ bool isValidBoardNumber(const char* number)
 }
 
 // Сравнение строк
-bool stringsEqual(const char* a, const char* b) {
+bool stringsEqual(const char* a, const char* b)
+{
     int i = 0;
     while (a[i] != '\0' && b[i] != '\0')
     {
@@ -468,26 +482,6 @@ void loadData(const char* filename, FlightInfo*& flights, int& count,int& err)
     // Закрытие файла
     file.close();
     return;
-}
-
-// Сравнение строк — используется для сортировки по времени
-bool lessThan(const char* s1,
-    const char* s2) 
-{
-    int i = 0;
-    while (s1[i] != '\0' && s2[i] != '\0')
-    {
-        if (s1[i] < s2[i])
-        {
-            return true;
-        }
-        if (s1[i] > s2[i])
-        {
-            return false;
-        }
-        i++;
-    }
-    return s1[i] == '\0' && s2[i] != '\0';
 }
 
 // Индексная сортировка массива FlightInfo по времени посадки 
